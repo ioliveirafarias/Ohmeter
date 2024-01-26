@@ -1,57 +1,35 @@
 #include <Arduino.h>
+#define SERIAL_BAUDRATE 9600
+#define PROBE A0
+#define INPUT_VOLTAGE 5 
+#define MAX_ANALOG_READ 1023
+#define NC_ANALOG_READ_THRESHOLD 1022
 
-/**********************************
- Globals and constants
-**********************************/
+/**************************************************
+ * Auxiliary functions
+**************************************************/
 
-#define MS_INTERVAL 500
-#define MS_DEBOUNCE_INTERVAL (MS_INTERVAL/5)
-
-#define SENSOR_PIN PB0
-#define RELAY_PIN PB2
-
-bool relay_value = LOW;
-
-/**********************************
- Auxiliary functions
-**********************************/
-
-bool checkForAClap( int timeLimit_ms ){
-
-  int waiting_start = millis();
-  while ( timeLimit_ms > (int)(millis()-waiting_start) ) {
-    if ( digitalRead( SENSOR_PIN )) {      
-      return true;
-    }
-  }
-  return false;
+float getVoltage( int analogReading ){
+  return (analogReading * INPUT_VOLTAGE) / (float) MAX_ANALOG_READ;
 }
 
-/**********************************
- Main functions
-**********************************/
+/**************************************************
+ * Main functions
+**************************************************/
 
-void setup(){
-  
-  //pinMode(SENSOR_PIN, INPUT);
-  pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite( RELAY_PIN, relay_value );
+void setup() {
+  Serial.begin( SERIAL_BAUDRATE );
+  pinMode( PROBE, INPUT_PULLUP );
 }
 
-void loop(){
+void loop() {
 
-  delay(MS_INTERVAL*2);
-
-  while( ! digitalRead( SENSOR_PIN ) ){}                            // Awaits for a start clap                           
-
-  delay( MS_DEBOUNCE_INTERVAL );                                    // Check for silence between claps
-  if( checkForAClap( MS_INTERVAL - MS_DEBOUNCE_INTERVAL ) ){        
-    return;
-  }
-
-  if( ! checkForAClap( MS_INTERVAL * 3 ) ){                             // Check for a second clap
-    return;
-  }
-
-  digitalWrite( RELAY_PIN, relay_value^=1 );                        // Toggle the relay state    
+  int reading = analogRead(PROBE);
+  if ( reading >= NC_ANALOG_READ_THRESHOLD ) {
+    Serial.println( "NC / Nothing connected" );
+  } else {
+    Serial.print("V:");
+    Serial.println( getVoltage(reading) );
+  }  
+  delay(2000);
 }
