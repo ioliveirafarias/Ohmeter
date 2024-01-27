@@ -2,22 +2,19 @@
 #define SERIAL_BAUDRATE 9600
 #define PROBE A0
 #define FIXED_RESISTOR 2200
-//#define PROBE_NC A1
 #define INPUT_VOLTAGE 5
 #define MAX_ANALOG_READ 1023
-//#define NC_ANALOG_READ_THRESHOLD 0
 
 /**************************************************
  * Auxiliary functions
 **************************************************/
 
 float getVoltage( int analogReading ){
-  return (analogReading / (float) MAX_ANALOG_READ) * INPUT_VOLTAGE;
+  return ((float)analogReading / (float) MAX_ANALOG_READ) * INPUT_VOLTAGE;
 }
 
-float getResistance( int analogReading ){
-  float aux = analogReading > (((float) MAX_ANALOG_READ)/2) ? 1-(analogReading / (float) MAX_ANALOG_READ) : 2*(analogReading / (float) MAX_ANALOG_READ);
-  return (aux) * FIXED_RESISTOR;
+float getResistance( int analogReading ){  
+  return ((FIXED_RESISTOR * (MAX_ANALOG_READ/(float)analogReading)) )-FIXED_RESISTOR;
 }
 
 /**************************************************
@@ -26,7 +23,6 @@ float getResistance( int analogReading ){
 
 void setup() {
   Serial.begin( SERIAL_BAUDRATE );
-  //pinMode( PROBE_NC, INPUT_PULLUP );
   pinMode( PROBE, INPUT );
 }
 
